@@ -1,0 +1,5 @@
+This plugin is open source, while the algorithm for segmentation is close source.
+
+You can use this plugin with free license from https://github.com/NLPIR-team/NLPIR.
+
+For commercial usage, please contact us for a commercial license.

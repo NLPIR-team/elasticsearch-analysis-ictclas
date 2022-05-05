@@ -1,0 +1,11 @@
+grant {
+    // permission java.io.FilePermission "<<ALL FILES>>", "read";
+    // permission java.io.FilePermission "/usr/share/elasticsearch/.cache/JNA/temp/", "read";
+    // permission java.util.PropertyPermission "jna.boot.library.path", "read";
+    // permission java.lang.RuntimePermission "loadLibrary.jnidispatch";
+    // permission java.util.PropertyPermission "*", "write";
+    permission java.util.PropertyPermission "jna.tmpdir", "write";
+    // permission java.lang.RuntimePermission "accessDeclaredMembers";
+    // permission java.lang.RuntimePermission "setFactory";
+    permission java.lang.reflect.ReflectPermission "suppressAccessChecks";
+};

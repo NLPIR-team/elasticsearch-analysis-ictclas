@@ -1,0 +1,62 @@
+buildscript {
+    repositories {
+        maven {
+            url = 'https://snapshots.elastic.co/maven/'
+        }
+        mavenCentral()
+    }
+    dependencies {
+        classpath "org.elasticsearch.gradle:build-tools:${elasticsearchVersion}"
+    }
+}
+import org.elasticsearch.gradle.VersionProperties
+
+
+apply plugin: 'java'
+apply plugin: 'java-library'
+apply plugin: 'idea'
+
+apply plugin: 'elasticsearch.esplugin'
+apply plugin: 'elasticsearch.yaml-rest-test'
+apply plugin: 'elasticsearch.testclusters'
+
+esplugin {
+    name 'analysis-ictclas'
+    description 'NLPIR-ICTCLAS Analysis Plugin for Elasticsearch'
+    classname 'com.lingjoin.elasticsearch.index.IctclasAnalysisPlugin'
+    licenseFile rootProject.file('LICENSE')
+    noticeFile rootProject.file('NOTICE.txt')
+
+}
+
+group 'com.lingjoin'
+version '0.1'
+
+sourceCompatibility = 17
+targetCompatibility = 17
+
+java {
+    withSourcesJar()
+    withJavadocJar()
+}
+
+
+repositories {
+
+    maven {
+        url = 'https://snapshots.elastic.co/maven/'
+    }
+    mavenCentral()
+}
+
+dependencies {
+    // https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-core
+    testImplementation "org.apache.logging.log4j:log4j-core:${VersionProperties.versions.log4j}"
+    // https://mvnrepository.com/artifact/org.slf4j/jul-to-slf4j
+//    implementation 'org.slf4j:jul-to-slf4j:1.7.36'
+    // https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-jul
+    implementation "org.apache.logging.log4j:log4j-jul:${VersionProperties.versions.log4j}"
+// https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-databind
+    implementation "com.fasterxml.jackson.core:jackson-databind:${VersionProperties.versions.jackson}"
+
+}
