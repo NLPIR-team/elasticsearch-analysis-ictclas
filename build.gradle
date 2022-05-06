@@ -17,8 +17,6 @@ apply plugin: 'java-library'
 apply plugin: 'idea'
 
 apply plugin: 'elasticsearch.esplugin'
-apply plugin: 'elasticsearch.yaml-rest-test'
-apply plugin: 'elasticsearch.testclusters'
 
 esplugin {
     name 'analysis-ictclas'
@@ -40,9 +38,7 @@ java {
     withJavadocJar()
 }
 
-
 repositories {
-
     maven {
         url = 'https://snapshots.elastic.co/maven/'
     }
@@ -52,11 +48,7 @@ repositories {
 dependencies {
     // https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-core
     testImplementation "org.apache.logging.log4j:log4j-core:${VersionProperties.versions.log4j}"
-    // https://mvnrepository.com/artifact/org.slf4j/jul-to-slf4j
-//    implementation 'org.slf4j:jul-to-slf4j:1.7.36'
-    // https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-jul
-    implementation "org.apache.logging.log4j:log4j-jul:${VersionProperties.versions.log4j}"
-// https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-databind
+    // https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-databind
     implementation "com.fasterxml.jackson.core:jackson-databind:${VersionProperties.versions.jackson}"
 
 }
