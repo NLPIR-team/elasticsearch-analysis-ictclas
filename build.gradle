@@ -60,3 +60,9 @@ dependencies {
     implementation "com.fasterxml.jackson.core:jackson-databind:${VersionProperties.versions.jackson}"
 
 }
+
+tasks.named("processTestResources").configure {
+    from("src/main/packaging") {
+        into("plugins/${esplugin.name}")
+    }
+}
