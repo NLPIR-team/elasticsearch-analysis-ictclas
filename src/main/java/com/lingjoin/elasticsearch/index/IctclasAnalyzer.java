@@ -31,8 +31,8 @@ public class IctclasAnalyzer extends Analyzer {
     @Override
     protected TokenStreamComponents createComponents(String fieldName) {
         try {
-            IctclasAnalysisPlugin.LOGGER.info("New tokenizer IctclasAnalyzer for {}", fieldName);
-            IctclasAnalysisPlugin.LOGGER.info("PluginPath: {}", Configuration.getPluginPath(environment));
+            IctclasAnalysisPlugin.LOGGER.debug("New tokenizer IctclasAnalyzer for {}", fieldName);
+            IctclasAnalysisPlugin.LOGGER.debug("PluginPath: {}", Configuration.getPluginPath(environment));
             return new TokenStreamComponents(new IctclasTokenizer(configuration, environment, fineSegment));
         } catch (NlpirException e) {
             IctclasAnalysisPlugin.LOGGER.error(e);
