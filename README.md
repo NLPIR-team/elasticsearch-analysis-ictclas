@@ -4,6 +4,8 @@ An analysis plugin for Elasticsearch by using ICTCLAS/NLPIR
 
 Analyzer: `ictclas_search`, `ictclas_index`
 
+Supported version: 8.2.0 ~ 7.14.2
+
 # Build
 
 ## 1. make config file `gradle.properties`
