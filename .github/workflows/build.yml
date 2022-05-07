@@ -1,0 +1,56 @@
+on:
+  push:
+    tags:
+      - 'v*'
+name: build and release
+jobs:
+  release-create:
+    name: release-create
+    runs-on: ubuntu-latest
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+    steps:
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: false
+          prerelease: false
+  release-upload:
+    name: release-build-upload
+    needs: release-create
+    strategy:
+      matrix:
+        elasticsearch-version: [ 8.2.0, 8.1.3, 7.17.3, 7.16.3, 7.15.2, 7.14.2, 7.13.4, 7.13.0]
+    runs-on: ubuntu-latest
+    steps:
+      - id: get_version
+        uses: battila7/get-version-action@v2
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Set up Java
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'zulu'
+          cache: 'gradle'
+      - name: Build release
+        run: |
+          ./gradlew build -x test --info \
+            -PelasticsearchVersion=${{matrix.elasticsearch-version}} \
+            -Dfile.encoding=UTF8
+          mv `ls ./build/distributions/*.zip` ./out.zip
+      - name: Upload Release Zip
+        id: upload-release-jar
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.release-create.outputs.upload_url }}
+          asset_path: ./out.zip
+          asset_name: nlpir-elasticsearch-analysis-ictclas-${{ steps.get_version.outputs.version-without-v }}-${{ matrix.elasticsearch-version }}.zip
+          asset_content_type: application/zip
