@@ -128,6 +128,10 @@ public final class IctclasTokenizer extends Tokenizer {
                         .orElse(null),
                 configuration.isOverWrite(), fineSegment
         );
+        if (!initState) {
+            IctclasAnalysisPlugin.LOGGER.info("Set jna.tmpdir in IctclasAnalysisPlugin");
+            Access.doPrivileged(() -> System.setProperty("jna.tmpdir", environment.tmpFile().toString()));
+        }
     }
 
     /**
