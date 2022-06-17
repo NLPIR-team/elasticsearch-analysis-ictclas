@@ -1,0 +1,18 @@
+---
+"Search":
+  - do:
+      indices.analyze:
+        body:
+          text:
+            - 国务院办公厅转发商务部
+            - 国务院办公厅转发商务部
+          analyzer: ictclas_search
+  - length: { tokens: 6 }
+  - match: { tokens.0.token: 国务院办公厅 }
+  - match: { tokens.1.token: 转发 }
+  - match: { tokens.2.token: 商务部 }
+  - match: { tokens.3.token: 国务院办公厅 }
+  - match: { tokens.3.start_offset: 12 }
+  - match: { tokens.3.end_offset: 18 }
+  - match: { tokens.4.token: 转发 }
+  - match: { tokens.5.token: 商务部 }

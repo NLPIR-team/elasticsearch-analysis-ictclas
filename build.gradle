@@ -16,7 +16,7 @@ import org.elasticsearch.gradle.VersionProperties
 apply plugin: 'java'
 apply plugin: 'java-library'
 apply plugin: 'idea'
-
+apply plugin: 'elasticsearch.yaml-rest-test'
 apply plugin: 'elasticsearch.esplugin'
 
 esplugin {
@@ -29,7 +29,7 @@ esplugin {
 }
 
 group 'com.lingjoin'
-version '0.1'
+version '0.2'
 
 sourceCompatibility = 17
 targetCompatibility = 17
@@ -49,6 +49,7 @@ repositories {
 dependencies {
     // https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-core
     testImplementation "org.apache.logging.log4j:log4j-core:${VersionProperties.versions.log4j}"
+    yamlRestTestRuntimeOnly "org.apache.logging.log4j:log4j-core:${VersionProperties.versions.log4j}"
     // https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-databind
     implementation "com.fasterxml.jackson.core:jackson-databind:${VersionProperties.versions.jackson}"
     // https://mvnrepository.com/artifact/com.fasterxml.jackson.dataformat/jackson-dataformat-yaml
