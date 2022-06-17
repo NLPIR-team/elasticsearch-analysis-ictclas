@@ -17,6 +17,7 @@ import java.beans.ConstructorProperties;
 import java.io.IOException;
 import java.io.Reader;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -95,22 +96,6 @@ public final class IctclasTokenizer extends Tokenizer {
     }
 
     /**
-     * 分词初始化
-     *
-     * @param data         词典路径
-     * @param encoding     编码 0：GBK；1：UTF-8
-     * @param sLicenceCode 授权码，默认为""
-     * @param userDict     用户词典文件
-     * @param bOverwrite   用户词典引入方式
-     * @param fineSegment  the fine segment
-     * @throws NlpirException the nlpir exception
-     */
-    private IctclasTokenizer(String data, int encoding, String sLicenceCode, String userDict, boolean bOverwrite, boolean fineSegment) throws NlpirException {
-        this.fineSegment = fineSegment;
-        this.init(data, encoding, sLicenceCode, userDict, bOverwrite);
-    }
-
-    /**
      * Instantiates a new Ictclas tokenizer.
      *
      * @param configuration the configuration
@@ -119,35 +104,35 @@ public final class IctclasTokenizer extends Tokenizer {
      * @throws NlpirException the nlpir exception
      */
     public IctclasTokenizer(Configuration configuration, Environment environment, boolean fineSegment) throws NlpirException {
-        this(
-                Configuration.getPluginPath(environment).toString(), 1, configuration.getLicenseCode(),
+        this.fineSegment = fineSegment;
+        if (!initState) {
+            IctclasAnalysisPlugin.LOGGER.info("Set jna.tmpdir in IctclasAnalysisPlugin");
+            Access.doPrivileged(() -> System.setProperty("jna.tmpdir", environment.tmpFile().toString()));
+        }
+        this.init(
+                Configuration.getPluginPath(environment).toString(), configuration.getLicenseCode(),
                 Optional.ofNullable(configuration.getUserDict())
                         .map(dict -> Configuration.getUserDictionaryPath(environment, dict))
                         .map(Path::toAbsolutePath)
                         .map(Path::toString)
                         .orElse(null),
-                configuration.isOverWrite(), fineSegment
+                configuration.isOverWrite()
         );
-        if (!initState) {
-            IctclasAnalysisPlugin.LOGGER.info("Set jna.tmpdir in IctclasAnalysisPlugin");
-            Access.doPrivileged(() -> System.setProperty("jna.tmpdir", environment.tmpFile().toString()));
-        }
     }
 
     /**
      * 分词组件初始化, 全局只能进行一次
      *
      * @param data         词典路径
-     * @param encoding     编码 0：GBK；1：UTF-8
      * @param sLicenceCode 授权码，默认为""
      * @param userDict     用户词典文件
      * @param bOverwrite   用户词典引入方式
      */
-    private void init(String data, int encoding, String sLicenceCode, String userDict, boolean bOverwrite) throws NlpirException {
+    private void init(String data, String sLicenceCode, String userDict, boolean bOverwrite) throws NlpirException {
         if (IctclasTokenizer.initState)
             return;
         LOGGER.info("NLPIR 初始化");
-        IctclasTokenizer.initState = IctclasNative.INSTANCE.NLPIR_Init(data, encoding, sLicenceCode);
+        IctclasTokenizer.initState = IctclasNative.INSTANCE.NLPIR_Init(data, 1, sLicenceCode);
         if (!IctclasTokenizer.initState) {
             String errorMsg = IctclasNative.INSTANCE.NLPIR_GetLastErrorMsg();
             LOGGER.error("NLPIR 初始化失败, {}", errorMsg);
@@ -167,15 +152,15 @@ public final class IctclasTokenizer extends Tokenizer {
 
     // 存储 tokenResults 读取进度
     private int cursor = 0;
+    private int endPosition = 0;
     // 存储当前文本分词结果, 空表示当前文本为空或者没有开始分词
-    private List<TokenResult> tokenResults = null;
+    private List<TokenResult> tokenResults = new ArrayList<>();
 
     @Override
     public boolean incrementToken() throws IOException {
-        // 完成后的初始化状态
-        if (tokenResults != null && tokenResults.size() <= cursor) {
-            cursor = 0;
-            tokenResults = null;
+
+        // 若 cursor 大于 tokenResults 的长度, 说明已经获取完当前数据
+        if (this.tokenResults.size() <= cursor) {
             return false;
         }
         // 获取分词结果, 并进行判断是否有token
@@ -191,7 +176,23 @@ public final class IctclasTokenizer extends Tokenizer {
         offsetAtt.setOffset(correctOffset(currentToken.begin), correctOffset(currentToken.end));
         typeAtt.setType(currentToken.pos);
         cursor++;
+        this.endPosition = currentToken.end;
         return true;
+    }
+
+    @Override
+    public void end() throws IOException {
+        super.end();
+        int finalOffset = correctOffset(this.endPosition);
+        offsetAtt.setOffset(finalOffset, finalOffset);
+    }
+
+    @Override
+    public void reset() throws IOException {
+        super.reset();
+        // 分词, 并重置 cursor
+        this.getTokenResults(input);
+        cursor = 0;
     }
 
     /**
