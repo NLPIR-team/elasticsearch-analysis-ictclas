@@ -29,7 +29,7 @@ esplugin {
 }
 
 group 'com.lingjoin'
-version '0.2'
+version '0.2.1'
 
 sourceCompatibility = 17
 targetCompatibility = 17
