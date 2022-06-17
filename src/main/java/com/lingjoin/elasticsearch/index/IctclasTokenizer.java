@@ -128,7 +128,7 @@ public final class IctclasTokenizer extends Tokenizer {
      * @param userDict     用户词典文件
      * @param bOverwrite   用户词典引入方式
      */
-    private synchronized void init(String data, String sLicenceCode, String userDict, boolean bOverwrite) throws NlpirException {
+    private static synchronized void init(String data, String sLicenceCode, String userDict, boolean bOverwrite) throws NlpirException {
         if (IctclasTokenizer.initState)
             return;
         LOGGER.info("NLPIR 初始化");

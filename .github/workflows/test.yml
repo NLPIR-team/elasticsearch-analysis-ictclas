@@ -22,7 +22,7 @@ jobs:
           cp NLPIR.user src/main/packaging/Data/
       - name: Test
         run: |
-          ./gradlew check \
+          ./gradlew test \
             -i \
             -PelasticsearchVersion=${{matrix.elasticsearch-version}} \
             -Dfile.encoding=UTF8
