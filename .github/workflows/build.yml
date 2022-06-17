@@ -40,7 +40,7 @@ jobs:
           cache: 'gradle'
       - name: Build release
         run: |
-          ./gradlew build -x test --info \
+          ./gradlew build -x test -x yamlRestTest --info \
             -PelasticsearchVersion=${{matrix.elasticsearch-version}} \
             -Dfile.encoding=UTF8
           mv `ls ./build/distributions/*.zip` ./out.zip
