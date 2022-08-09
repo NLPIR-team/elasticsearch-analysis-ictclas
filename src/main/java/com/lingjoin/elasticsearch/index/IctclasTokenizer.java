@@ -17,7 +17,6 @@ import java.beans.ConstructorProperties;
 import java.io.IOException;
 import java.io.Reader;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -109,7 +108,7 @@ public final class IctclasTokenizer extends Tokenizer {
             IctclasAnalysisPlugin.LOGGER.info("Set jna.tmpdir in IctclasAnalysisPlugin");
             Access.doPrivileged(() -> System.setProperty("jna.tmpdir", environment.tmpFile().toString()));
         }
-        this.init(
+        init(
                 Configuration.getPluginPath(environment).toString(), configuration.getLicenseCode(),
                 Optional.ofNullable(configuration.getUserDict())
                         .map(dict -> Configuration.getUserDictionaryPath(environment, dict))
@@ -154,24 +153,30 @@ public final class IctclasTokenizer extends Tokenizer {
     private int cursor = 0;
     private int endPosition = 0;
     // 存储当前文本分词结果, 空表示当前文本为空或者没有开始分词
-    private List<TokenResult> tokenResults = new ArrayList<>();
+    private List<TokenResult> tempTokenResults;
 
+    private void setTokenResults(List<TokenResult> tokenResults) {
+        tempTokenResults = tokenResults;
+    }
+    private List<TokenResult> getTokenResults() {
+        return Optional.ofNullable(this.tempTokenResults).orElse(List.of());
+    }
     @Override
     public boolean incrementToken() throws IOException {
 
         // 若 cursor 大于 tokenResults 的长度, 说明已经获取完当前数据
-        if (this.tokenResults.size() <= cursor) {
+        if (this.getTokenResults().size() <= cursor) {
             return false;
         }
         // 获取分词结果, 并进行判断是否有token
         this.getTokenResults(input);
-        if (this.tokenResults == null) {
+        if (this.getTokenResults().size() == 0) {
             cursor = 0;
             return false;
         }
         // 有分词结果, 开始进行输出
         clearAttributes();
-        TokenResult currentToken = this.tokenResults.get(cursor);
+        TokenResult currentToken = this.getTokenResults().get(cursor);
         termAtt.append(currentToken.text);
         offsetAtt.setOffset(correctOffset(currentToken.begin), correctOffset(currentToken.end));
         typeAtt.setType(currentToken.pos);
@@ -212,7 +217,7 @@ public final class IctclasTokenizer extends Tokenizer {
         LOGGER.debug("Tokenizer Input: {}", targetString);
         if (!targetString.isEmpty()) {
             String segmentResult = IctclasNative.INSTANCE.NLPIR_Tokenizer4IR(targetString, fineSegment);
-            this.tokenResults = TokenResult.parse(segmentResult);
+            this.setTokenResults(TokenResult.parse(segmentResult));
             LOGGER.debug("Tokenizer Output: {}", segmentResult);
         } else {
             LOGGER.debug("Tokenizer Input is empty pass tokenization");
