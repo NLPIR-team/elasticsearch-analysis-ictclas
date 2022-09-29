@@ -1,5 +1,4 @@
----
-"Search":
+"List Text":
   - do:
       indices.analyze:
         body:

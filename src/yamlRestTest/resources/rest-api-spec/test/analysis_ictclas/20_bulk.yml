@@ -1,0 +1,30 @@
+---
+"Bulk":
+  - do:
+      indices.create:
+        index: test_index
+        body:
+          mappings:
+            properties:
+              text:
+                type: text
+                analyzer: ictclas_index
+  - do:
+      bulk:
+        refresh: true
+        body:
+          - '{"index": {"_index": "test_index", "_id": "test_id"}}'
+          - '{ "text": "国务院办公厅转发商务部" }'
+          - '{"index": {"_index": "test_index", "_id": "test_id2"}}'
+          - '{ "text": "国务院办公厅转发商务部" }'
+          - '{"index": {"_index": "test_index"}}'
+          - '{ "text": "国务院办公厅转发商务部" }'
+          - '{"index": {"_index": "test_index"}}'
+          - '{ "text": "国务院办公厅转发商务部" }'
+  - match:
+      errors: false
+  - do:
+      count:
+        index: test_index
+
+  - match: { count: 4 }
