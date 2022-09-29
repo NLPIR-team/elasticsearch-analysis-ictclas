@@ -26,3 +26,9 @@ jobs:
             -i \
             -PelasticsearchVersion=${{matrix.elasticsearch-version}} \
             -Dfile.encoding=UTF8
+      - name: Yaml Rest Test
+        run: |
+          ./gradlew yamlRestTest \
+            -i \
+            -PelasticsearchVersion=${{matrix.elasticsearch-version}} \
+            -Dfile.encoding=UTF8
