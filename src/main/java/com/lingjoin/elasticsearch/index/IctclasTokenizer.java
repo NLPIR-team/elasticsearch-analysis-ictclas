@@ -109,16 +109,16 @@ public final class IctclasTokenizer extends Tokenizer {
         if (!initState) {
             IctclasAnalysisPlugin.LOGGER.info("Set jna.tmpdir in IctclasAnalysisPlugin");
             Access.doPrivileged(() -> System.setProperty("jna.tmpdir", environment.tmpFile().toString()));
+            init(
+                    Configuration.getPluginPath(environment).toString(), configuration.getLicenseCode(),
+                    Optional.ofNullable(configuration.getUserDict())
+                            .map(dict -> Configuration.getUserDictionaryPath(environment, dict))
+                            .map(Path::toAbsolutePath)
+                            .map(Path::toString)
+                            .orElse(null),
+                    configuration.isOverWrite()
+            );
         }
-        init(
-                Configuration.getPluginPath(environment).toString(), configuration.getLicenseCode(),
-                Optional.ofNullable(configuration.getUserDict())
-                        .map(dict -> Configuration.getUserDictionaryPath(environment, dict))
-                        .map(Path::toAbsolutePath)
-                        .map(Path::toString)
-                        .orElse(null),
-                configuration.isOverWrite()
-        );
     }
 
     /**
@@ -139,6 +139,7 @@ public final class IctclasTokenizer extends Tokenizer {
             LOGGER.error("NLPIR 初始化失败, {}", errorMsg);
             throw new NlpirException(errorMsg);
         }
+        LOGGER.info("NLPIR 初始化成功");
         // TODO 导入词典
         if (userDict != null && !userDict.isEmpty() && !userDict.equals("\"\"")) {
             int state = IctclasNative.INSTANCE.NLPIR_ImportUserDict(userDict, bOverwrite);
@@ -180,7 +181,7 @@ public final class IctclasTokenizer extends Tokenizer {
         // 若当前的 Token 的 end 比存储的最大的 endPosition 要小或者想等, 那么后者应该只是前者更细的分词, 需要将
         // PositionIncrementAttribute 设置为 0
         // 使用循环用于跳过位置信息错误的 token
-        while(true) {
+        while (true) {
             // 若 cursor 大于 tokenResults 的长度, 说明已经获取完当前数据
             if (this.getTokenResults().size() <= cursor) {
                 return false;
@@ -190,8 +191,8 @@ public final class IctclasTokenizer extends Tokenizer {
             // 获取token数据, 并解析位置信息
             TokenResult currentToken = this.getTokenResults().get(cursor);
             // 过滤掉在超过上一个 PositionAtt 不为0的 token, 否则会抛出异常
-            if (lastBeginPosition > currentToken.begin){
-                cursor ++;
+            if (lastBeginPosition > currentToken.begin) {
+                cursor++;
                 continue;
             }
             // 若当前 Token 的位置在上一个 PositionAtt 为非0 的 token 内部, 则设置当前的 positionAtt 为 0, 为前者的细粒度分词
