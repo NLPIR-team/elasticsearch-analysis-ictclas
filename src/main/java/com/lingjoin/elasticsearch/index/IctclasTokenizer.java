@@ -252,6 +252,7 @@ public final class IctclasTokenizer extends Tokenizer {
         String targetString = buffer.toString();
         LOGGER.debug("Tokenizer Input: {}", targetString);
         if (!targetString.isEmpty()) {
+            LOGGER.debug("Tokenizer Input: {}", targetString);
             String segmentResult = IctclasNative.INSTANCE.NLPIR_Tokenizer4IR(targetString, fineSegment);
             this.setTokenResults(TokenResult.parse(segmentResult));
             LOGGER.debug("Tokenizer Output: {}", segmentResult);

@@ -22,7 +22,7 @@ public class IctclasAnalyzerProvider extends AbstractIndexAnalyzerProvider<Ictcl
      * @param settings      settings
      */
     private IctclasAnalyzerProvider(IndexSettings indexSettings, Environment environment, String name, Settings settings, boolean fineSegment) {
-        super(indexSettings, name, settings);
+        super(name, settings);
         // this.fineSegment = fineSegment;
         // this.configuration = Configuration.getConfiguration(environment);
         analyzer = new IctclasAnalyzer(Configuration.getConfiguration(environment), environment, fineSegment);
