@@ -68,3 +68,6 @@ tasks.findAll { task ->
         }
     }
 }
+test {
+    testLogging.showStandardStreams = true
+}
