@@ -7,6 +7,7 @@ import com.lingjoin.elasticsearch.util.Access;
 import com.lingjoin.elasticsearch.util.Configuration;
 import com.lingjoin.nlpir.IctclasNative;
 import com.lingjoin.nlpir.NlpirException;
+import com.sun.jna.Native;
 import org.apache.lucene.analysis.Tokenizer;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.analysis.tokenattributes.OffsetAttribute;
@@ -17,6 +18,8 @@ import org.elasticsearch.env.Environment;
 import java.beans.ConstructorProperties;
 import java.io.IOException;
 import java.io.Reader;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
@@ -109,6 +112,10 @@ public final class IctclasTokenizer extends Tokenizer {
         if (!initState) {
             IctclasAnalysisPlugin.LOGGER.info("Set jna.tmpdir in IctclasAnalysisPlugin");
             Access.doPrivileged(() -> System.setProperty("jna.tmpdir", environment.tmpFile().toString()));
+            // https://github.com/java-native-access/jna/blob/5.10.0/src/com/sun/jna/Native.java#L846C3-L846C3
+            // 设置 jna.encoding 为 UTF-8, 在Elasticsearch 7.16.0 后从 5.7.0 升级到 5.10.0, 会造成转码的错误
+            Access.doPrivileged(() -> System.setProperty("jna.encoding", StandardCharsets.UTF_8.name()));
+            LOGGER.info("Set jna.encoding: {}", Native.getDefaultStringEncoding());
             init(
                     Configuration.getPluginPath(environment).toString(), configuration.getLicenseCode(),
                     Optional.ofNullable(configuration.getUserDict())
@@ -173,7 +180,7 @@ public final class IctclasTokenizer extends Tokenizer {
     public boolean incrementToken() {
         // 获取分词结果, 并进行判断是否有token
         // this.getTokenResults(input);
-        if (this.getTokenResults().size() == 0) {
+        if (this.getTokenResults().isEmpty()) {
             cursor = 0;
             return false;
         }

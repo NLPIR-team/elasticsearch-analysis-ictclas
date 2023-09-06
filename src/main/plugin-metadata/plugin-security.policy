@@ -5,6 +5,7 @@ grant {
     // permission java.lang.RuntimePermission "loadLibrary.jnidispatch";
     // permission java.util.PropertyPermission "*", "write";
     permission java.util.PropertyPermission "jna.tmpdir", "write";
+    permission java.util.PropertyPermission "jna.encoding", "write";
     // permission java.lang.RuntimePermission "accessDeclaredMembers";
     // permission java.lang.RuntimePermission "setFactory";
     permission java.lang.reflect.ReflectPermission "suppressAccessChecks";
