@@ -17,6 +17,8 @@ public class Configuration {
     private final String licenseCode;
     private final String userDict;
     private final boolean overWrite;
+    private final boolean logStats;
+    private final int numThreads;
 
     /**
      * Instantiates a new Configuration.
@@ -24,12 +26,16 @@ public class Configuration {
      * @param licenseCode licenseCode
      * @param userDict    userDict 用户词典名称
      * @param overWrite   overWrite 是否覆盖用户词典
+     * @param logStats    the log stats
+     * @param numThreads  the num threads
      */
-    @ConstructorProperties({"licenseCode", "userDict", "overWrite"})
-    public Configuration(String licenseCode, String userDict, boolean overWrite) {
+    @ConstructorProperties({"licenseCode", "userDict", "overWrite", "logStats", "numThreads"})
+    public Configuration(String licenseCode, String userDict, boolean overWrite, boolean logStats, int numThreads) {
         this.licenseCode = licenseCode;
         this.userDict = userDict;
         this.overWrite = overWrite;
+        this.logStats = logStats;
+        this.numThreads = numThreads;
     }
 
     /**
@@ -59,8 +65,26 @@ public class Configuration {
         return overWrite;
     }
 
+    /**
+     * Is log stats.
+     *
+     * @return the boolean
+     */
+    public boolean isLogStats() {
+        return logStats;
+    }
+
+    /**
+     * Gets num threads.
+     *
+     * @return the num threads
+     */
+    public int getNumThreads() {
+        return numThreads;
+    }
+
     private static Configuration getDefaultConfiguration() {
-        return new Configuration("", "", false);
+        return new Configuration("", "", false, false, 10);
     }
 
     /**

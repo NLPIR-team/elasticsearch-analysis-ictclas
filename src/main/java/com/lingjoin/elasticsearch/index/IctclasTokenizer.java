@@ -18,9 +18,10 @@ import org.elasticsearch.env.Environment;
 import java.beans.ConstructorProperties;
 import java.io.IOException;
 import java.io.Reader;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -38,9 +39,17 @@ public final class IctclasTokenizer extends Tokenizer {
 
     private static boolean initState = false;
 
+    private final boolean logStats;
+
     // 分词方法, 是否进行细拆分, true用于索引, false用于搜索
     private final boolean fineSegment;
 
+    private static long SEGMENT_TIME = 0L;
+    private static long PARSE_TIME = 0L;
+    private static Instant LAST_LOG_TIME = Instant.now();
+    private static final int LOGGING_INTERVAL = 10;
+    private static long TOTAL_STRING = 0L;
+    private static long TOTAL_TOKEN = 0L;
 
     /**
      * 分词结果类
@@ -109,6 +118,7 @@ public final class IctclasTokenizer extends Tokenizer {
      */
     public IctclasTokenizer(Configuration configuration, Environment environment, boolean fineSegment) throws NlpirException {
         this.fineSegment = fineSegment;
+        this.logStats = configuration.isLogStats();
         if (!initState) {
             IctclasAnalysisPlugin.LOGGER.info("Set jna.tmpdir in IctclasAnalysisPlugin");
             Access.doPrivileged(() -> System.setProperty("jna.tmpdir", environment.tmpFile().toString()));
@@ -211,10 +221,7 @@ public final class IctclasTokenizer extends Tokenizer {
                 lastBeginPosition = currentToken.begin;
                 lastEndPosition = currentToken.end;
             }
-            LOGGER.debug(String.format(
-                    "[%s] start:%s end:%s lastMax:%s position:%s",
-                    currentToken.text, currentToken.begin, currentToken.end, lastEndPosition, positionAtt.getPositionIncrement()
-            ));
+            LOGGER.debug("[{}] start:{} end:{} lastMax:{} position:{}", currentToken.text, currentToken.begin, currentToken.end, lastEndPosition, positionAtt.getPositionIncrement());
             // 更新其他位置信息
             termAtt.append(currentToken.text);
             offsetAtt.setOffset(correctOffset(currentToken.begin), correctOffset(currentToken.end));
@@ -250,7 +257,7 @@ public final class IctclasTokenizer extends Tokenizer {
      * @throws IOException the io exception
      */
     private void getTokenResults(Reader reader) throws IOException {
-        char[] arr = new char[1024];
+        char[] arr = new char[10240];
         StringBuilder buffer = new StringBuilder();
         int numCharsRead;
         while ((numCharsRead = reader.read(arr, 0, arr.length)) != -1) {
@@ -259,13 +266,34 @@ public final class IctclasTokenizer extends Tokenizer {
         String targetString = buffer.toString();
         LOGGER.debug("Tokenizer Input: {}", targetString);
         if (!targetString.isEmpty()) {
-            LOGGER.debug("Tokenizer Input: {}", targetString);
-            String segmentResult = IctclasNative.INSTANCE.NLPIR_Tokenizer4IR(targetString, fineSegment);
-            this.setTokenResults(TokenResult.parse(segmentResult));
-            LOGGER.debug("Tokenizer Output: {}", segmentResult);
+            this.setTokenResults(tokenize(targetString));
         } else {
             LOGGER.debug("Tokenizer Input is empty pass tokenization");
         }
+        if (Duration.between(LAST_LOG_TIME, Instant.now()).toSeconds() > LOGGING_INTERVAL && logStats) {
+            LOGGER.info("Speed: {} token/s  {} char/s, Tokenize time: {}, Parse time {}, Total string {} Total token {}",
+                    (float) TOTAL_TOKEN / (float) SEGMENT_TIME * 1000000000,
+                    (float) TOTAL_STRING / (float) SEGMENT_TIME * 1000000000,
+                    SEGMENT_TIME, PARSE_TIME, TOTAL_STRING, TOTAL_TOKEN);
+            LOGGER.info("Current thread: {}", Thread.currentThread().getName());
+            LAST_LOG_TIME = Instant.now();
+            TOTAL_TOKEN = TOTAL_STRING = SEGMENT_TIME = PARSE_TIME = 0;
+        }
+    }
 
+    private List<IctclasTokenizer.TokenResult> tokenize(String targetString) {
+        var startTime = Instant.now();
+        String segmentResult = IctclasNative.INSTANCE.NLPIR_Tokenizer4IR(targetString, fineSegment);
+        Instant segmentTime = Instant.now();
+        var result = TokenResult.parse(segmentResult);
+        Instant parseTime = Instant.now();
+        LOGGER.debug("Tokenizer Output: {}", segmentResult);
+        if (logStats) {
+            SEGMENT_TIME += Duration.between(startTime, segmentTime).toNanos();
+            PARSE_TIME += Duration.between(segmentTime, parseTime).toNanos();
+            TOTAL_STRING += targetString.length();
+            TOTAL_TOKEN += result.size();
+        }
+        return result;
     }
 }
